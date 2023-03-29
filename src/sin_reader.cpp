@@ -10,6 +10,7 @@ class ROS_SUB {
 	public:
 		ROS_SUB();
 		void topic_cb(classwork3::sinusoid);
+		void filter(classwork3::sinusoid);
 	
 	private:
 		ros::NodeHandle _filter_nh;
@@ -26,18 +27,14 @@ class ROS_SUB {
 ROS_SUB::ROS_SUB() {
 	//Initialize a subscriber:
 	//	Input: 	topic name: /sinusoid
-	//			queue:	1
-	//			Callback function
-	//			Object context: the value of data members
+
 	_filter_pub= _filter_nh.advertise<std_msgs::Float32>("/filter", 5);
 	_topic_sub = _filter_nh.subscribe("/sinusoid", 1, &ROS_SUB::topic_cb, this);
 
 
 }
 
-//Callback function: the input of the function is the data to read
-void ROS_SUB::topic_cb(classwork3::sinusoid sen) {
-
+void ROS_SUB::filter(classwork3::sinusoid sen){
 	//if first iteration, y(0)=0, u(0) = sinsusoid value in t=0
     if(_count == 0){
 		_filter_values.push_back(sen.value);
@@ -49,7 +46,14 @@ void ROS_SUB::topic_cb(classwork3::sinusoid sen) {
 	ROS_INFO("%f",_y.data); 
 	_values.push_back(sen.value);
 	_count++;
-	
+}
+
+//Callback function: the input of the function is the data to read
+void ROS_SUB::topic_cb(classwork3::sinusoid sen) {
+
+	ROS_INFO("%f",sen.value); 
+	//I've decided to call the member function filter in the callback function
+	filter(sen);
 
 }
 
@@ -61,12 +65,10 @@ int main( int argc, char** argv ) {
 	//Create the ROS_SUB class object
 	ROS_SUB rs;
 	
-	//ros::spin() blocks the main thread from exiting until ROS invokes a shutdown - via a Ctrl + C for example
-	// It is written as the last line of code of the main thread of the program.
-	//Also the spin invokes the callbacks to flush their queue and process incoming data
+
 	ros::spin(); 
 
-	//----This function will be never overcome
+	//forever
 
 	return 0;
 }
